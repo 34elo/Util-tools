@@ -49,14 +49,16 @@ class App:
         preview_frame = ttk.LabelFrame(main_frame, text='Предпросмотр данных', padding='10')
         preview_frame.pack(fill='both', expand=True, pady=(0, 15))
 
-        columns = ('#', 'Значение')
+        columns = ('#', 'Значение', 'Длина')
         self.tree = ttk.Treeview(preview_frame, columns=columns, show='headings', height=8)
 
         self.tree.heading('#', text='#')
         self.tree.heading('Значение', text='Значение')
+        self.tree.heading('Длина', text='Длина')
 
-        self.tree.column('#', width=60, anchor='center')
-        self.tree.column('Значение', width=400)
+        self.tree.column('#', width=50, anchor='center')
+        self.tree.column('Значение', width=350)
+        self.tree.column('Длина', width=80, anchor='center')
 
         scrollbar = ttk.Scrollbar(preview_frame, orient='vertical', command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
@@ -113,7 +115,7 @@ class App:
             self.tree.delete(item)
 
         for i, value in enumerate(self.values, 1):
-            self.tree.insert('', 'end', values=(i, value))
+            self.tree.insert('', 'end', values=(i, value, len(value)))
 
         self.count_label.config(text=f'Записей: {len(self.values)}')
 
