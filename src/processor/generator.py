@@ -8,7 +8,7 @@ def generate_xml(values, action_id, version, inn, output_path):
 
     for value in values:
         lines.append('        <packing>')
-        lines.append('            <kitu><![CDATA[ {value} ]]></kitu>'.replace('{value}', value))
+        lines.append('            <kitu><![CDATA[{value}]]></kitu>'.replace('{value}', value))
         lines.append('        </packing>')
 
     lines.append('    </packings_list>')
