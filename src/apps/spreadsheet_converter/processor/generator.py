@@ -1,5 +1,5 @@
-def generate(values, action_id, version, inn):
-    """Генерирует XML из списка значений."""
+def generate(values, action_id, version, inn, output_path):
+    """Генерирует XML файл из списка значений."""
     lines = []
     lines.append('<?xml version="1.0" encoding="UTF-8"?>')
     lines.append(f'<disaggregation action_id="{action_id}" version="{version}">')
@@ -8,9 +8,13 @@ def generate(values, action_id, version, inn):
 
     for value in values:
         lines.append('        <packing>')
-        lines.append(f'            <kitu><![CDATA[{value}]]></kitu>')
+        lines.append('            <kitu><![CDATA[{value}]]></kitu>'.replace('{value}', value))
         lines.append('        </packing>')
 
     lines.append('    </packings_list>')
     lines.append('</disaggregation>')
-    return '\n'.join(lines)
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+
+    return len(values)

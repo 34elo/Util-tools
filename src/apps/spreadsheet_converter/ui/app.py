@@ -139,11 +139,8 @@ class App:
             version = self.entries['version'].get()
             inn = self.entries['inn'].get()
 
-            content = generate(self.values, action_id, version, inn)
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(content)
-            
-            messagebox.showinfo('Готово', f'Файл сохранён.\nЗаписей: {len(self.values)}')
+            count = generate(self.values, action_id, version, inn, output_path)
+            messagebox.showinfo('Готово', f'Файл сохранён.\nЗаписей: {count}')
 
         except Exception as e:
             messagebox.showerror('Ошибка', str(e))
