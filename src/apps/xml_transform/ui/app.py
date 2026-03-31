@@ -10,7 +10,7 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title('XML Transform')
-        self.root.geometry('1200x800')
+        self.root.geometry('1200x900')
         self.root.configure(bg='#f0f0f0')
         self.root.resizable(True, True)
 
