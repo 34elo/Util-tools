@@ -1,3 +1,3 @@
-from .xml_processor import parse, transform, write_file
+from .xml_processor import read, generate
 
-__all__ = ['parse', 'transform', 'write_file']
+__all__ = ['read', 'generate']

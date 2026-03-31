@@ -2,13 +2,11 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
 
-from processor import parse, transform
+from processor import read, generate
 from config import DEFAULTS
 
 
 class App:
-    """Главное окно приложения."""
-    
     def __init__(self, root):
         self.root = root
         self.root.title('XML Transform')
@@ -16,15 +14,16 @@ class App:
         self.root.configure(bg='#f0f0f0')
         self.root.resizable(True, True)
 
-        self.input_path = None
-        self.data = []
+        self.xml_path = None
+        self.data = None
+        self.input_values = []
 
         main_frame = ttk.Frame(root, padding='20')
         main_frame.pack(fill='both', expand=True)
 
         file_frame = ttk.LabelFrame(
             main_frame,
-            text='Выберите .xml файл (формат 1)',
+            text='Выберите .xml файл',
             padding='10'
         )
         file_frame.pack(fill='x', pady=(0, 15))
@@ -47,16 +46,16 @@ class App:
         preview_frame = ttk.LabelFrame(main_frame, text='Предпросмотр', padding='10')
         preview_frame.pack(fill='both', expand=True, pady=(0, 15))
 
-        columns = ('#', 'Pack Code', 'Длина')
-        self.tree = ttk.Treeview(preview_frame, columns=columns, show='headings', height=12)
+        columns = ('#', 'pack_code', 'cis_count')
+        self.tree = ttk.Treeview(preview_frame, columns=columns, show='headings', height=8)
 
         self.tree.heading('#', text='#')
-        self.tree.heading('Pack Code', text='Pack Code')
-        self.tree.heading('Длина', text='Длина')
+        self.tree.heading('pack_code', text='Pack Code')
+        self.tree.heading('cis_count', text='Кол-во CIS')
 
         self.tree.column('#', width=50, anchor='center')
-        self.tree.column('Pack Code', width=400)
-        self.tree.column('Длина', width=80, anchor='center')
+        self.tree.column('pack_code', width=300)
+        self.tree.column('cis_count', width=100, anchor='center')
 
         scrollbar = ttk.Scrollbar(preview_frame, orient='vertical', command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
@@ -65,37 +64,51 @@ class App:
         scrollbar.pack(side='right', fill='y')
 
         self.count_label = ttk.Label(
-            preview_frame, text='Pack count: 0',
+            preview_frame, text='Записей: 0',
             font=('Segoe UI', 9, 'italic')
         )
         self.count_label.pack(anchor='e', pady=(5, 0))
 
-        params_frame = ttk.LabelFrame(main_frame, text='Параметры (формат 2)', padding='10')
+        params_frame = ttk.LabelFrame(main_frame, text='Параметры XML', padding='10')
         params_frame.pack(fill='x', pady=(0, 15))
 
         self.entries = {}
-        params = [
-            ('document_id', 'Document ID:'),
-            ('ver_form', 'VerForm:'),
-            ('ver_prog', 'VerProg:'),
-            ('operation_date_time', 'Operation Date:'),
-            ('document_number', 'Document Number:'),
-            ('org_name', 'Org Name:'),
-            ('rrc', 'RRC:'),
-            ('phone_number', 'Phone:'),
-            ('email', 'Email:'),
-            ('country_code', 'Country Code:'),
-            ('text_address', 'Text Address:'),
-        ]
-
-        for key, label in params:
-            row = ttk.Frame(params_frame)
+        
+        unit_pack_frame = ttk.LabelFrame(params_frame, text='Unit Pack', padding='5')
+        unit_pack_frame.pack(fill='x', pady=3)
+        
+        for label in ['document_id', 'VerForm', 'file_date_time', 'VerProg']:
+            row = ttk.Frame(unit_pack_frame)
             row.pack(fill='x', pady=2)
-            ttk.Label(row, text=label, width=20).pack(side='left')
+            ttk.Label(row, text=f'{label}:', width=18).pack(side='left')
             entry = ttk.Entry(row, width=40)
-            entry.insert(0, DEFAULTS.get(key, ''))
+            entry.insert(0, DEFAULTS.get(label, ''))
             entry.pack(side='left', padx=5, fill='x', expand=True)
-            self.entries[key] = entry
+            self.entries[label] = entry
+
+        document_frame = ttk.LabelFrame(params_frame, text='Document', padding='5')
+        document_frame.pack(fill='x', pady=3)
+        
+        for label in ['operation_date_time', 'document_number']:
+            row = ttk.Frame(document_frame)
+            row.pack(fill='x', pady=2)
+            ttk.Label(row, text=f'{label}:', width=18).pack(side='left')
+            entry = ttk.Entry(row, width=40)
+            entry.insert(0, DEFAULTS.get(label, ''))
+            entry.pack(side='left', padx=5, fill='x', expand=True)
+            self.entries[label] = entry
+
+        organisation_frame = ttk.LabelFrame(params_frame, text='Organisation', padding='5')
+        organisation_frame.pack(fill='x', pady=3)
+        
+        for label in ['org_name', 'LP_TIN', 'RRC', 'country_code', 'text_address', 'phone_number', 'email']:
+            row = ttk.Frame(organisation_frame)
+            row.pack(fill='x', pady=2)
+            ttk.Label(row, text=f'{label}:', width=18).pack(side='left')
+            entry = ttk.Entry(row, width=40)
+            entry.insert(0, DEFAULTS.get(label, ''))
+            entry.pack(side='left', padx=5, fill='x', expand=True)
+            self.entries[label] = entry
 
         self.save_btn = ttk.Button(
             main_frame, text='Сохранить как .xml',
@@ -104,46 +117,39 @@ class App:
         self.save_btn.pack(pady=5)
 
     def select_file(self):
-        """Выбор xml файла."""
         path = filedialog.askopenfilename(
             title='Выберите .xml файл',
             filetypes=[('XML files', '*.xml'), ('All files', '*.*')]
         )
         if path:
-            self.input_path = path
+            self.xml_path = path
             self.file_label.config(text=os.path.basename(path))
 
             try:
-                self.data = parse(path)
+                self.data = read(path)
                 self.update_preview()
             except Exception as e:
                 messagebox.showerror('Ошибка', f'Не удалось прочитать файл:\n{e}')
                 self.file_label.config(text='Ошибка чтения', foreground='red')
 
     def update_preview(self):
-        """Обновление таблицы предпросмотра."""
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        import xml.etree.ElementTree as ET
-        try:
-            tree = ET.parse(self.input_path)
-            root = tree.getroot()
-            
-            pack_contents = root.findall('.//pack_content')
-            for i, pc in enumerate(pack_contents, 1):
-                pack_code = pc.find('pack_code')
-                pack_code_text = pack_code.text.strip() if pack_code is not None and pack_code.text else ''
-                self.tree.insert('', 'end', values=(i, pack_code_text, len(pack_code_text)))
-            
-            self.count_label.config(text=f'Pack count: {len(pack_contents)}')
-        except Exception as e:
-            self.count_label.config(text=f'Error: {e}')
+        for i, pack in enumerate(self.data.get('pack_contents', []), 1):
+            pack_code = pack.get('pack_code', '')
+            cis_count = len(pack.get('cis', []))
+            self.tree.insert('', 'end', values=(i, pack_code, cis_count))
+
+        self.count_label.config(text=f'Записей: {len(self.data.get("pack_contents", []))}')
 
     def save_file(self):
-        """Сохранение данных в XML файл."""
-        if not self.input_path:
+        if not self.xml_path:
             messagebox.showerror('Ошибка', 'Сначала выберите .xml файл')
+            return
+
+        if not self.data:
+            messagebox.showerror('Ошибка', 'Файл не содержит данных для экспорта')
             return
 
         output_path = filedialog.asksaveasfilename(
@@ -155,14 +161,39 @@ class App:
             return
 
         try:
-            params = {key: entry.get() for key, entry in self.entries.items()}
-            params['file_date_time'] = ''
+            unit_pack_attrs = {
+                'document_id': self.entries['document_id'].get(),
+                'VerForm': self.entries['VerForm'].get(),
+                'file_date_time': self.entries['file_date_time'].get(),
+                'VerProg': self.entries['VerProg'].get(),
+            }
             
-            content = transform(self.input_path, params)
+            document_attrs = {
+                'operation_date_time': self.entries['operation_date_time'].get(),
+                'document_number': self.entries['document_number'].get(),
+            }
+            
+            organisation = {
+                'LP_info': {
+                    'org_name': self.entries['org_name'].get(),
+                    'LP_TIN': self.entries['LP_TIN'].get(),
+                    'RRC': self.entries['RRC'].get(),
+                },
+                'address': {
+                    'country_code': self.entries['country_code'].get(),
+                    'text_address': self.entries['text_address'].get(),
+                },
+                'contacts': {
+                    'phone_number': self.entries['phone_number'].get(),
+                    'email': self.entries['email'].get(),
+                },
+            }
+
+            content = generate(self.data, unit_pack_attrs, document_attrs, organisation)
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            messagebox.showinfo('Готово', 'Файл сохранён.')
+            messagebox.showinfo('Готово', f'Файл сохранён.\nЗаписей: {len(self.data.get("pack_contents", []))}')
 
         except Exception as e:
             messagebox.showerror('Ошибка', str(e))
