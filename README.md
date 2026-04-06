@@ -5,7 +5,7 @@
 ## Приложения
 
 ### Spreadsheet Converter
-Конвертер данных из Excel (xlsx) в XML формат.
+Конвертер данных из Excel (xlsx) в XML формат + извлечение UIT кодов из JSON.
 
 ### XML Transform
 Преобразование XML файлов из формата 1 в формат 2.
@@ -35,6 +35,14 @@ python main.py
 pip install pyinstaller
 pyinstaller --onefile --windowed src/apps/spreadsheet_converter/main.py
 ```
+
+### Функционал
+
+#### Вкладка "Из Excel в XML"
+Конвертация значений из xlsx файла в XML формат. Данные читаются из первого столбца.
+
+#### Вкладка "Извлечение UIT кодов"
+Парсинг JSON файла и извлечение всех значений `uit_code` с последующим экспортом в xlsx.
 
 ---
 
@@ -71,10 +79,19 @@ util-tools/
         │   ├── requirements.txt
         │   ├── processor/
         │   │   ├── __init__.py
-        │   │   ├── reader.py
-        │   │   └── generator.py
+        │   │   ├── excel_xml/
+        │   │   │   ├── __init__.py
+        │   │   │   ├── reader.py
+        │   │   │   └── generator.py
+        │   │   └── uit_extractor/
+        │   │       ├── __init__.py
+        │   │       ├── parser.py
+        │   │       └── exporter.py
         │   └── ui/
-        │       └── app.py
+        │       ├── excel_xml/
+        │       │   └── app.py
+        │       └── uit_extractor/
+        │           └── app.py
         └── xml_transform/
             ├── config.py
             ├── main.py
