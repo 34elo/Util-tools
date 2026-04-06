@@ -7,8 +7,6 @@ def generate_xlsx(uit_codes, output_path):
     ws = wb.active
     ws.title = 'UIT Codes'
 
-    ws.append(['UIT Code'])
-
     for code in uit_codes:
         ws.append([code])
 
